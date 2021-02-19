@@ -1,0 +1,31 @@
+{
+  "name": "@huds0n/utilities",
+  "version": "1.5.0-beta.8",
+  "description": "Extended hooks and utilities for React Native",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "keywords": [
+    "utilities",
+    "hooks"
+  ],
+  "contributors": [
+    {
+      "name": "J Hudson"
+    },
+    {
+      "name": "M Hudson"
+    }
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@huds0n/error": "1.5.0-beta.8",
+    "tinycolor2": "^1.4.1"
+  },
+  "devDependencies": {
+    "@types/react-native": "^0.62.13",
+    "@types/tinycolor2": "^1.4.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
