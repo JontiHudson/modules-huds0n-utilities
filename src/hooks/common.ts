@@ -50,7 +50,8 @@ export function useAnimatedValue(initialValue: number = 0) {
 }
 
 export function useAnimatedCurrentValue(animatedValue: Animated.Value) {
-  const ref = useRef<number>(0);
+  // @ts-ignore
+  const ref = useRef<number>(animatedValue._value || 0);
 
   useEffect(
     () => {

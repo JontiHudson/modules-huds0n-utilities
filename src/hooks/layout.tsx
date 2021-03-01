@@ -19,8 +19,8 @@ export namespace useLayout {
     onLayout?: OnLayoutFn;
   };
 
-  export type LayoutRectangle = LayoutRectangleRN;
-  export type Layout = undefined | LayoutRectangle;
+  export type LayoutRectangle = LayoutRectangleRN & { isInitialized: boolean };
+  export type Layout = LayoutRectangle;
   export type Result = [Layout, OnLayoutFn];
 }
 
@@ -37,8 +37,13 @@ export function useLayout({
   onInitialize,
   onLayout,
 }: useLayout.Options = {}): useLayout.Result {
-  const initialisedRef = useRef(false);
-  const [layout, setLayout] = useState<useLayout.Layout>(undefined);
+  const [layout, setLayout] = useState<useLayout.Layout>({
+    x: 0,
+    y: 0,
+    height: 0,
+    width: 0,
+    isInitialized: false,
+  });
 
   const handleLayout = useCallback(
     (layoutChangeEvent: useLayout.LayoutChangeEvent) => {
@@ -52,13 +57,12 @@ export function useLayout({
         isSignificantChange(newLayout.x, layout?.x) ||
         isSignificantChange(newLayout.y, layout?.y)
       ) {
-        setLayout(newLayout);
-        onLayout?.(layoutChangeEvent);
-
-        if (!initialisedRef.current) {
-          initialisedRef.current = true;
+        if (!layout.isInitialized) {
           onInitialize?.(layoutChangeEvent);
         }
+
+        setLayout({ ...newLayout, isInitialized: true });
+        onLayout?.(layoutChangeEvent);
       }
     },
     [layout, onInitialize, onLayout],
