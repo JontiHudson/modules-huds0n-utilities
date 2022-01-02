@@ -1,4 +1,3 @@
-import { useRef } from 'react';
 import {
   Dimensions,
   LayoutChangeEvent as LayoutChangeEventRN,
@@ -17,6 +16,7 @@ export namespace useLayout {
   export type Options = {
     onInitialize?: OnInitializeFn;
     onLayout?: OnLayoutFn;
+    significantChangePercent?: number;
   };
 
   export type LayoutRectangle = LayoutRectangleRN & { isInitialized: boolean };
@@ -24,11 +24,11 @@ export namespace useLayout {
   export type Result = [Layout, OnLayoutFn];
 }
 
-function isSignificantChange(a: number, b = 0, percentage = 1) {
+function isSignificantChange(a: number, b = 0, percentage?: number) {
+  if (!percentage) return true;
+
   const diff = a - b;
-  if (diff === 0) {
-    return false;
-  }
+  if (diff === 0) return false;
 
   return ((diff > 0 ? diff : -diff) / b) * 100 > percentage;
 }
@@ -36,6 +36,7 @@ function isSignificantChange(a: number, b = 0, percentage = 1) {
 export function useLayout({
   onInitialize,
   onLayout,
+  significantChangePercent = 0.1,
 }: useLayout.Options = {}): useLayout.Result {
   const [layout, setLayout] = useState<useLayout.Layout>({
     x: 0,
@@ -52,10 +53,18 @@ export function useLayout({
       } = layoutChangeEvent;
 
       if (
-        isSignificantChange(newLayout.width, layout?.width) ||
-        isSignificantChange(newLayout.height, layout?.height) ||
-        isSignificantChange(newLayout.x, layout?.x) ||
-        isSignificantChange(newLayout.y, layout?.y)
+        isSignificantChange(
+          newLayout.width,
+          layout?.width,
+          significantChangePercent,
+        ) ||
+        isSignificantChange(
+          newLayout.height,
+          layout?.height,
+          significantChangePercent,
+        ) ||
+        isSignificantChange(newLayout.x, layout?.x, significantChangePercent) ||
+        isSignificantChange(newLayout.y, layout?.y, significantChangePercent)
       ) {
         if (!layout.isInitialized) {
           onInitialize?.(layoutChangeEvent);

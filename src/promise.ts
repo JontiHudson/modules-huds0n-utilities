@@ -1,37 +1,3 @@
-import Error from '@huds0n/error';
-
-export function makePromiseCancellable<T>(
-  promise: Promise<T>,
-): { cancellablePromise: Promise<T>; cancel: () => boolean } {
-  let cancellable = true;
-
-  const returnObj = { cancel: () => false, cancellablePromise: null as any };
-
-  returnObj.cancellablePromise = new Promise<T>(async (resolve, reject) => {
-    returnObj.cancel = () => {
-      if (cancellable) {
-        reject(
-          new Error({
-            code: 'PROMISE_CANCELLED',
-            handled: true,
-            message: 'Promise cancelled',
-            name: 'Huds0n Error',
-            severity: 'NONE',
-          }),
-        );
-        return true;
-      }
-      return false;
-    };
-
-    resolve(await promise);
-  }).finally(() => {
-    cancellable = false;
-  });
-
-  return returnObj;
-}
-
 export function timeout(delay: number): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(() => resolve(), delay);

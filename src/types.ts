@@ -1,4 +1,8 @@
-export type Node = number | React.MutableRefObject<any>;
+export type Component =
+  | React.Component<any, any, any>
+  | React.ComponentClass<any, any>;
+
+export type Node = number | string | Component | null;
 
 export type NodeMeasurements = {
   x: number;

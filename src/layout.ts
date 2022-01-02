@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import React, { useRef } from 'react';
 import {
   Dimensions,
   findNodeHandle,
@@ -11,25 +11,60 @@ import {
 import Error from '@huds0n/error';
 
 import { onMount } from './hooks/lifecycle';
+import * as Types from './types';
 
 export namespace getNodeId {
-  export type Node = number | React.RefObject<any>;
+  export type Node = Types.Node;
 }
 
-export function getNodeId(node: getNodeId.Node) {
-  return typeof node === 'number' ? node : findNodeHandle(node.current) || -1;
+export function getNodeId(
+  node: Types.Node,
+  allowUndefined: true,
+): number | string | null;
+export function getNodeId(
+  node: Types.Node,
+  allowUndefined?: false,
+): number | string;
+export function getNodeId(
+  node: Types.Node,
+  allowUndefined?: boolean,
+): number | string | null {
+  if (typeof node === 'number' || typeof node === 'string') {
+    return node;
+  }
+
+  const id = findNodeHandle(node);
+
+  if (id !== null) return id;
+  if (allowUndefined) return null;
+
+  throw new Error({
+    name: 'Huds0n Error',
+    code: 'NODE_INVALID',
+    message: 'Invalid node',
+    info: { node },
+    severity: 'HIGH',
+  });
 }
 
-export function useNodeId<T = any>(): [
-  { current: number | undefined },
+export namespace getIsSameNode {
+  export type Node = Types.Node;
+}
+
+export function isSameNode(a: getIsSameNode.Node, b: getIsSameNode.Node) {
+  return getNodeId(a) === getNodeId(b);
+}
+
+export function useNodeId<T extends Types.Component = Types.Component>(): [
+  { current: number | string | undefined },
   React.RefObject<T>,
 ] {
   const ref = useRef<T>(null);
-  const id = useRef<number | undefined>();
+  const id = useRef<number | string | undefined>();
 
   onMount(
     () => {
-      id.current = getNodeId(ref);
+      id.current = getNodeId(ref.current);
     },
     { layout: 'AFTER' },
   );
@@ -47,99 +82,77 @@ export function getOrientation(): getOrientation.Orientation {
     : 'LANDSCAPE';
 }
 
-export namespace getOrientation {
-  export type Node = getNodeId.Node;
-
-  export type NodeMeasurements = {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    pageX: number;
-    pageY: number;
-  };
-}
-
 export namespace measureNodeAsync {
-  export type Node = getNodeId.Node;
-
-  export type NodeMeasurements = getOrientation.NodeMeasurements;
+  export type Node = Types.Node;
+  export type NodeMeasurements = Types.NodeMeasurements;
 }
 
-export async function measureNodeAsync(node: getOrientation.Node) {
-  return new Promise<getOrientation.NodeMeasurements>((resolve, reject) => {
+export async function measureNodeAsync(node: measureNodeAsync.Node) {
+  return new Promise<measureNodeAsync.NodeMeasurements>((resolve) => {
     const nodeId = getNodeId(node);
 
-    if (nodeId === null) {
-      reject(
-        new Error({
-          name: 'Huds0n Error',
-          code: 'MEASURE_NODE_INVALID',
-          message: 'Invalid node passed into measureNodeAsync',
-          info: { node },
-          severity: 'HIGH',
-        }),
-      );
-    } else {
-      UIManager.measure(nodeId, (x, y, width, height, pageX, pageY) => {
-        resolve({ x, y, width, height, pageX, pageY });
-      });
-    }
+    UIManager.measure(nodeId as number, (x, y, width, height, pageX, pageY) => {
+      resolve({ x, y, width, height, pageX, pageY });
+    });
   });
 }
 
 export namespace measureRelativeNodeAsync {
-  export type Node = getNodeId.Node;
-
-  export type RelativeNodeMeasurement = {
-    left: number;
-    top: number;
-    width: number;
-    height: number;
-  };
+  export type Node = Types.Node;
+  export type RelativeNodeMeasurement = Types.RelativeNodeMeasurement;
 }
 
 export async function measureRelativeNodeAsync(
-  node: measureRelativeNodeAsync.Node,
-  relativeNode: measureRelativeNodeAsync.Node,
+  node: measureNodeAsync.Node,
+  relativeNode: measureNodeAsync.Node,
 ) {
   return new Promise<measureRelativeNodeAsync.RelativeNodeMeasurement>(
     (resolve, reject) => {
       const nodeId = getNodeId(node);
-
       const relativeNodeId = getNodeId(relativeNode);
 
-      if (nodeId === null || relativeNodeId === null) {
-        reject(
-          new Error({
-            name: 'Huds0n Error',
-            code: 'MEASURE_NODE_INVALID',
-            message: 'Invalid node passed into measureNodeAsync',
-            info: { node, relativeNode },
-            severity: 'HIGH',
-          }),
-        );
-      } else {
-        UIManager.measureLayout(
-          nodeId,
-          relativeNodeId,
-          () =>
-            reject(
-              new Error({
-                name: 'Huds0n Error',
-                code: 'MEASURE_NODE_INVALID',
-                message: 'Invalid node passed into measureNodeAsync',
-                info: { node, relativeNode },
-                severity: 'HIGH',
-              }),
-            ),
-          (left, top, width, height) => {
-            resolve({ left, top, width, height });
-          },
-        );
-      }
+      UIManager.measureLayout(
+        nodeId as number,
+        relativeNodeId as number,
+        () =>
+          reject(
+            new Error({
+              name: 'Huds0n Error',
+              code: 'MEASURE_RELATIVE_NODE_ERROR',
+              message: 'Unable to measure relative nodes',
+              info: { node, relativeNode },
+              severity: 'HIGH',
+            }),
+          ),
+        (left, top, width, height) => {
+          resolve({ left, top, width, height });
+        },
+      );
     },
   );
+}
+
+export namespace getIsDescendant {
+  export type Node = Types.Node;
+}
+
+export function getIsDescendant(
+  node: getIsDescendant.Node,
+  relativeNode: getIsDescendant.Node,
+) {
+  return new Promise<boolean>((resolve) => {
+    const nodeId = getNodeId(node);
+    const relativeNodeId = getNodeId(relativeNode);
+
+    // @ts-ignore viewIsDescendantOf not typed
+    UIManager.viewIsDescendantOf(
+      nodeId,
+      relativeNodeId,
+      (isDescendant: boolean) => {
+        resolve(isDescendant);
+      },
+    );
+  });
 }
 
 export namespace separateInnerOuterStyles {
@@ -157,6 +170,7 @@ export function separateInnerOuterStyles(
   const {
     alignContent,
     alignItems,
+    backgroundColor,
     direction,
     flexDirection,
     justifyContent,
@@ -177,6 +191,7 @@ export function separateInnerOuterStyles(
     innerStyle: {
       ...('alignContent' in flattenedStyle && { alignContent }),
       ...('alignItems' in flattenedStyle && { alignItems }),
+      ...('backgroundColor' in flattenedStyle && { backgroundColor }),
       ...('direction' in flattenedStyle && { direction }),
       ...('flexDirection' in flattenedStyle && { flexDirection }),
       ...('justifyContent' in flattenedStyle && { justifyContent }),

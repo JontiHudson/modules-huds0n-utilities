@@ -17,7 +17,7 @@ export namespace useEffect {
 
 export function useEffect(
   effectFunction: () => any,
-  dependencies: any[] = [],
+  dependencies?: any[],
   { layout, skipMounts, runOnce }: useEffect.Options = {},
 ) {
   const effect = layout === 'BEFORE' ? useLayoutEffect : useEffectRN;
