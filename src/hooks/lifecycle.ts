@@ -3,24 +3,24 @@ import {
   useLayoutEffect,
   useRef,
   useState as useStateRN,
-} from 'react';
+} from "react";
 
-export namespace useEffect {
-  export type LayoutTiming = 'BEFORE' | 'AFTER' | 'END';
-
-  export type Options = {
-    layout?: LayoutTiming;
-    skipMounts?: boolean;
-    runOnce?: boolean;
-  };
-}
+import type { Types } from "../types";
 
 export function useEffect(
   effectFunction: () => any,
   dependencies?: any[],
-  { layout, skipMounts, runOnce }: useEffect.Options = {},
+  {
+    layout,
+    skipMounts,
+    runOnce,
+  }: {
+    layout?: Types.LayoutTiming;
+    skipMounts?: boolean;
+    runOnce?: boolean;
+  } = {}
 ) {
-  const effect = layout === 'BEFORE' ? useLayoutEffect : useEffectRN;
+  const effect = layout === "BEFORE" ? useLayoutEffect : useEffectRN;
 
   if (skipMounts || runOnce) {
     const run = useRef(false);
@@ -49,14 +49,14 @@ export function useEffect(
 
 function useEffectLayoutTiming(
   effectFunction: () => any,
-  layout?: useEffect.LayoutTiming,
+  layout?: Types.LayoutTiming
 ) {
   switch (layout) {
-    case 'END':
+    case "END":
       setTimeout(effectFunction, 0);
       return undefined;
 
-    case 'AFTER':
+    case "AFTER":
       requestAnimationFrame(effectFunction);
       return undefined;
 
@@ -66,21 +66,18 @@ function useEffectLayoutTiming(
   }
 }
 
-export namespace onMount {
-  export type LayoutTiming = useEffect.LayoutTiming;
-
-  export type Options = {
-    layout?: LayoutTiming;
-  };
-}
-
-export function onMount(onMountFunction: () => any, options?: onMount.Options) {
+export function onMount(
+  onMountFunction: () => any,
+  options?: {
+    layout?: Types.LayoutTiming;
+  }
+) {
   useEffect(
     () => {
       onMountFunction();
     },
     [],
-    { layout: options?.layout },
+    { layout: options?.layout }
   );
 }
 
@@ -96,19 +93,14 @@ export function useForceUpdate(): () => void {
   };
 }
 
-export namespace useMounted {
-  export type MountedState = boolean | 'MOUNTING';
-  export type MountedRef = React.MutableRefObject<useMounted.MountedState>;
-}
-
 export function useMounted() {
-  const isMounted: useMounted.MountedRef = useRef('MOUNTING');
+  const isMounted = useRef<boolean | "MOUNTING">("MOUNTING");
 
   onMount(
     () => {
       isMounted.current = true;
     },
-    { layout: 'AFTER' },
+    { layout: "AFTER" }
   );
 
   onDismount(() => {
@@ -119,13 +111,13 @@ export function useMounted() {
 }
 
 export function useState<T>(
-  initialState: () => T,
+  initialState: () => T
 ): [T, (newState: T | ((prevState: T) => T)) => void];
 export function useState<T>(
-  initialState: T,
+  initialState: T
 ): [T, (newState: T | ((prevState: T) => T)) => void];
 export function useState<T>(
-  initialState: T,
+  initialState: T
 ): [T, (newState: T | ((prevState: T) => T)) => void] {
   const isMounted = useMounted();
 

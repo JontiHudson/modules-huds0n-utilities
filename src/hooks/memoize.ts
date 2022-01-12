@@ -1,17 +1,17 @@
-import { useCallback as useCallbackRN, useRef } from 'react';
+import { useCallback as useCallbackRN, useRef } from "react";
 
-import { useState } from './lifecycle';
+import { useState } from "./lifecycle";
 
 export function useCallback<A extends any[], T>(
   callback: (...args: A) => T,
-  dependencies: any[] = [],
+  dependencies: any[] = []
 ) {
   return useCallbackRN(callback, dependencies);
 }
 
 export function useAsyncCallback<A extends any[], T>(
   asyncCallback: (...args: A) => T | Promise<T>,
-  dependencies: any[] = [],
+  dependencies: any[] = []
 ): [(...args: A) => Promise<T>, boolean] {
   const [isRunning, setIsRunning] = useState(false);
   const callback = useCallbackRN(asyncCallback, [...dependencies, isRunning]);
