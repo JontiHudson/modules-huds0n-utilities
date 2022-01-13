@@ -23,15 +23,15 @@ function useLayout({ onInitialize, onLayout, significantChangePercent = 0.1, } =
     });
     const handleLayout = (0, memoize_1.useCallback)((layoutChangeEvent) => {
         const { nativeEvent: { layout: newLayout }, } = layoutChangeEvent;
-        if (isSignificantChange(newLayout.width, layout === null || layout === void 0 ? void 0 : layout.width, significantChangePercent) ||
-            isSignificantChange(newLayout.height, layout === null || layout === void 0 ? void 0 : layout.height, significantChangePercent) ||
-            isSignificantChange(newLayout.x, layout === null || layout === void 0 ? void 0 : layout.x, significantChangePercent) ||
-            isSignificantChange(newLayout.y, layout === null || layout === void 0 ? void 0 : layout.y, significantChangePercent)) {
+        if (isSignificantChange(newLayout.width, layout?.width, significantChangePercent) ||
+            isSignificantChange(newLayout.height, layout?.height, significantChangePercent) ||
+            isSignificantChange(newLayout.x, layout?.x, significantChangePercent) ||
+            isSignificantChange(newLayout.y, layout?.y, significantChangePercent)) {
             if (!layout.isInitialized) {
-                onInitialize === null || onInitialize === void 0 ? void 0 : onInitialize(layoutChangeEvent);
+                onInitialize?.(layoutChangeEvent);
             }
-            setLayout(Object.assign(Object.assign({}, newLayout), { isInitialized: true }));
-            onLayout === null || onLayout === void 0 ? void 0 : onLayout(layoutChangeEvent);
+            setLayout({ ...newLayout, isInitialized: true });
+            onLayout?.(layoutChangeEvent);
         }
     }, [layout, onInitialize, onLayout]);
     return [layout, handleLayout];
@@ -41,14 +41,13 @@ function useOrientation(options) {
     const [orientation, setOrientation] = (0, lifecycle_1.useState)(layout_1.getOrientation);
     (0, lifecycle_1.useEffect)(() => {
         const handleOrientationChange = () => {
-            var _a;
             const newOrientation = (0, layout_1.getOrientation)();
             setOrientation(newOrientation);
-            (_a = options === null || options === void 0 ? void 0 : options.onChange) === null || _a === void 0 ? void 0 : _a.call(options, newOrientation);
+            options?.onChange?.(newOrientation);
         };
         react_native_1.Dimensions.addEventListener("change", handleOrientationChange);
         return () => react_native_1.Dimensions.removeEventListener("change", handleOrientationChange);
-    }, [options === null || options === void 0 ? void 0 : options.onChange]);
+    }, [options?.onChange]);
     return orientation;
 }
 exports.useOrientation = useOrientation;
