@@ -1,6 +1,6 @@
 {
   "name": "@huds0n/utilities",
-  "version": "1.6.0-beta50",
+  "version": "1.6.0-beta51",
   "description": "Extended hooks and utilities for React Native",
   "main": "./index.js",
   "types": "./index.d.ts",
@@ -18,8 +18,8 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@huds0n/error": "1.6.0-beta50",
-    "@huds0n/shared-state": "1.6.0-beta50",
+    "@huds0n/error": "1.6.0-beta51",
+    "@huds0n/shared-state": "1.6.0-beta51",
     "tinycolor2": "^1.4.2",
     "tslib": "^2.3.1"
   },
