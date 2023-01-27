@@ -1,17 +1,17 @@
-import { useCallback as useCallbackRN, useRef } from "react";
+import { useCallback as useCallbackRN, useRef } from 'react';
 
-import { useState } from "./lifecycle";
+import { useState } from './lifecycle';
 
 export function useCallback<A extends any[], T>(
   callback: (...args: A) => T,
-  dependencies: any[] = []
+  dependencies: any[] = [],
 ) {
   return useCallbackRN(callback, dependencies);
 }
 
 export function useAsyncCallback<A extends any[], T>(
   asyncCallback: (...args: A) => T | Promise<T>,
-  dependencies: any[] = []
+  dependencies: any[] = [],
 ): [(...args: A) => Promise<T>, boolean] {
   const [isRunning, setIsRunning] = useState(false);
   const callback = useCallbackRN(asyncCallback, [...dependencies, isRunning]);
@@ -30,7 +30,9 @@ export function useAsyncCallback<A extends any[], T>(
 }
 
 export function useMemo<T>(memoFunction: () => T, dependencies: any[] = []): T {
+  // eslint-disable-next-line no-null/no-null
   const resultRef = useRef<T | null>(null);
+  // eslint-disable-next-line no-null/no-null
   const dependenciesRef = useRef<any[] | null>(null);
 
   const dependencyLength = dependencies.length;
@@ -55,6 +57,5 @@ export function useMemo<T>(memoFunction: () => T, dependencies: any[] = []): T {
     }
   }
 
-  // @ts-ignore
-  return resultRef.current;
+  return resultRef.current as T;
 }

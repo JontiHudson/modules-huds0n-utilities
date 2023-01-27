@@ -79,10 +79,9 @@ export function useOrientation(options?: {
       options?.onChange?.(newOrientation);
     };
 
-    Dimensions.addEventListener("change", handleOrientationChange);
+    const remove = Dimensions.addEventListener("change", handleOrientationChange);
 
-    return () =>
-      Dimensions.removeEventListener("change", handleOrientationChange);
+    return remove;
   }, [options?.onChange]);
 
   return orientation;

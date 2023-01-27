@@ -1,8 +1,7 @@
 import { useImperativeHandle, useRef } from 'react';
 import { Animated } from 'react-native';
 
-import Error from '@huds0n/error';
-
+import Huds0nError from '@huds0n/error';
 import { useEffect } from './lifecycle';
 import { useCallback } from './memoize';
 
@@ -21,12 +20,13 @@ export function useKeyExtractor(key: string) {
     try {
       return item[key].toString();
     } catch (error) {
-      throw Error.transform(error, {
+      throw Huds0nError.create({
         name: 'Huds0n Error',
         code: 'KEY_EXTRACTOR_ERROR',
         message: 'Unable to extract key from item',
-        severity: 'MEDIUM',
+        severity: 'WARN',
         info: { item, key },
+        from: error,
       });
     }
   });
@@ -37,21 +37,22 @@ export function useId(name: string) {
 }
 
 export function useCopyRef<T>(ref: React.Ref<T>) {
+  // eslint-disable-next-line no-null/no-null
   const copiedRef = useRef<T>(null);
   useImperativeHandle(ref, () => copiedRef.current as T);
 
   return copiedRef;
 }
 
-export function useAnimatedValue(initialValue: number = 0) {
+export function useAnimatedValue(initialValue = 0) {
   const ref = useRef(new Animated.Value(initialValue));
 
   return ref.current;
 }
 
 export function useAnimatedCurrentValue(animatedValue: Animated.Value) {
-  // @ts-ignore
-  const ref = useRef<number>(animatedValue._value || 0);
+  // _value not typed
+  const ref = useRef<number>((animatedValue as any)._value || 0);
 
   useEffect(
     () => {

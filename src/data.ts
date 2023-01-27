@@ -1,13 +1,13 @@
-import Error from '@huds0n/error';
+import { Huds0nError } from '@huds0n/error';
 
-export function removeUndefinedProps<O extends Object>(object: O) {
+export function removeUndefinedProps<O extends object>(object: O) {
   return Object.entries(object).reduce(
     (acc, [key, prop]) => (prop === undefined ? acc : { ...acc, [key]: prop }),
     {},
   ) as Partial<O>;
 }
 
-export function mapObject<O extends Object, StartProp, EndProp>(
+export function mapObject<O extends object, StartProp, EndProp>(
   object: O,
   callback: (prop: StartProp, key: string) => EndProp,
 ) {
@@ -33,66 +33,76 @@ export function shallowCompareArrays(a: any, b: any) {
   return !aArr.some((e, i) => e !== bArr[i]);
 }
 
-export function deepClone<O extends Object>(object: O): O {
+export function deepClone<O extends object>(object: O): O {
   try {
-    const objectCopy = {};
+    const objectCopy = {} as O;
 
     for (const key in object) {
       const value = object[key];
 
       if (Array.isArray(value)) {
-        // @ts-ignore
-        objectCopy[key] = Object.values(deepClone({ ...value }));
-        // @ts-ignore
+        objectCopy[key] = Object.values(deepClone({ ...value })) as O[Extract<
+          keyof O,
+          string
+        >];
       } else if (value?.constructor?.name === 'Object') {
-        // @ts-ignore
         objectCopy[key] = deepClone(value);
       } else {
-        // @ts-ignore
         objectCopy[key] = value;
       }
     }
 
-    // @ts-ignore
     return objectCopy;
   } catch (error) {
-    throw Error.transform(error, {
+    throw Huds0nError.create({
       code: 'DEEP_CLONE_ERROR',
       message: 'Unable to deep clone object',
-      severity: 'HIGH',
+      severity: 'ERROR',
+      from: error,
     });
   }
 }
 
-export function JSONcopy<T>(target: T): T {
+export function jsonCopy<T>(target: T): T {
   return JSON.parse(JSON.stringify(target));
 }
 
-export function JSONisEqual(a: any, b: any) {
+export function jsonIsEqual(a: any, b: any) {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
+export function assignEnumerableGetter<S extends object, T extends S>(
+  target: T,
+  source: S,
+  key: keyof S,
+) {
+  const descriptors = Object.getOwnPropertyDescriptor(source, key);
+
+  if (descriptors?.get) {
+    addEnumerableGetter<T, keyof S>(target, key, descriptors.get);
+  } else {
+    Object.defineProperty(target, key, {
+      configurable: true,
+      enumerable: true,
+      writable: true,
+      value: source[key],
+    });
+  }
+}
+
 export function assignEnumerableGetters(
-  ...arg: (Object | undefined | null)[]
+  ...arg: (object | undefined | null)[]
 ): any {
-  return arg.reduce((acc: any, source) => {
+  return arg.reduce(<S>(acc: any, source: S) => {
     if (!source) {
       return acc;
     }
 
-    Object.keys(source).forEach((sourceKey) => {
-      const descriptors = Object.getOwnPropertyDescriptor(source, sourceKey);
-
-      if (descriptors?.get) {
-        addEnumerableGetter(acc, sourceKey, descriptors.get);
+    Object.entries(source).forEach(([key, value]) => {
+      if (typeof value === 'object' && value?.constructor.name === 'Object') {
+        acc[key] = assignEnumerableGetters({}, value);
       } else {
-        Object.defineProperty(acc, sourceKey, {
-          configurable: true,
-          enumerable: true,
-          writable: true,
-          // @ts-ignore
-          value: source[sourceKey],
-        });
+        assignEnumerableGetter(acc, source, key as keyof S);
       }
     });
 
@@ -100,7 +110,7 @@ export function assignEnumerableGetters(
   }, {});
 }
 
-export function addEnumerableGetter<T extends Object, K extends keyof T>(
+export function addEnumerableGetter<T extends object, K extends keyof T>(
   target: T,
   key: K,
   callback: () => T[K],
@@ -147,21 +157,20 @@ export function mergeEnumerableGetters<O extends Record<string, any>>(
   if (!obj1) return obj2;
   if (!obj2) return obj1;
 
-  const oldObj = {} as any;
-  const newObj = assignEnumerableGetters({}, obj2);
+  const newObj = assignEnumerableGetters({}, obj1);
 
-  Object.entries(obj1).forEach(([key, value]: [keyof O, any]) => {
+  Object.entries(obj2).forEach(([key, value]: [keyof O, any]) => {
     if (
       typeof value === 'object' &&
-      typeof obj1[key] === 'object' &&
+      typeof newObj[key] === 'object' &&
       value?.constructor.name === 'Object' &&
-      obj1[key]?.constructor.name === 'Object'
+      newObj[key]?.constructor.name === 'Object'
     ) {
-      newObj[key] = assignEnumerableGetters({}, value, obj2[key]);
-    } else if (!(key in obj2)) {
-      oldObj[key] = value;
+      newObj[key] = assignEnumerableGetters({}, newObj[key], value);
+    } else {
+      assignEnumerableGetter(newObj, obj2, key);
     }
   });
 
-  return assignEnumerableGetters(oldObj, newObj);
+  return newObj;
 }

@@ -46,8 +46,8 @@ function useOrientation(options) {
             setOrientation(newOrientation);
             (_a = options === null || options === void 0 ? void 0 : options.onChange) === null || _a === void 0 ? void 0 : _a.call(options, newOrientation);
         };
-        react_native_1.Dimensions.addEventListener("change", handleOrientationChange);
-        return () => react_native_1.Dimensions.removeEventListener("change", handleOrientationChange);
+        const remove = react_native_1.Dimensions.addEventListener("change", handleOrientationChange);
+        return remove;
     }, [options === null || options === void 0 ? void 0 : options.onChange]);
     return orientation;
 }

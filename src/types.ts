@@ -1,7 +1,7 @@
 import type {
   LayoutChangeEvent as LayoutChangeEventRN,
   LayoutRectangle as LayoutRectangleRN,
-} from "react-native";
+} from 'react-native';
 
 export declare namespace Types {
   export type ReactComponent =
@@ -25,13 +25,13 @@ export declare namespace Types {
 
   export type LayoutChangeEvent = LayoutChangeEventRN;
   export type OnInitializeLayout = (
-    layoutChangeEvent: LayoutChangeEvent
+    layoutChangeEvent: LayoutChangeEvent,
   ) => void;
   export type OnLayout = (layoutChangeEvent: LayoutChangeEvent) => void;
   export type LayoutRectangle = LayoutRectangleRN & { isInitialized: boolean };
 
-  export type Orientation = "PORTRAIT" | "LANDSCAPE";
+  export type Orientation = 'PORTRAIT' | 'LANDSCAPE';
   export type OnOrientationChange = (orientation: Orientation) => void;
 
-  export type LayoutTiming = "BEFORE" | "AFTER" | "END";
+  export type LayoutTiming = 'BEFORE' | 'AFTER' | 'END';
 }
